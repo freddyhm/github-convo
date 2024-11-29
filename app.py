@@ -16,9 +16,6 @@ def analyze_github():
     data = request.json
     username = data.get("username")
     
-    if not username:
-        return jsonify({"error": "Username is required"}), 400
-    
     try:
         github_data = get_github_data(username)
         conversation_starters = generate_conversation_starters(github_data)
