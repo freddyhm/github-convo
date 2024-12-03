@@ -31,9 +31,9 @@ def analyze_github():
             "contributions": github_data["contributions"],
             "conversation_starters": conversation_starters
         })
-    except Exception as e:
-        print(f"Debug - Error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    except Exception as error:
+        print(f"Debug - Error: {str(error)}")
+        return jsonify({"error": str(error)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
