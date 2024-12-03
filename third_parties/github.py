@@ -11,61 +11,45 @@ from output_parsers import conversation_starters_parser, ConversationStarters
 load_dotenv()
 
 def get_github_data(username: str) -> Dict:
-    """
-    Retrieve GitHub user data including languages, contributions, and interests
-    """
     try:
-        g = Github(os.getenv("GITHUB_ACCESS_TOKEN"))
-        user = g.get_user(username)
+        github_user = Github(os.getenv("GITHUB_ACCESS_TOKEN")).get_user(username)
         
-        # Test if we can access the user (validates token and username)
-        _ = user.login
-        
-        # Get basic profile info
-        profile_data = {
-            "name": user.name or username,
-            "avatar_url": user.avatar_url,
-            "bio": user.bio or "",
-            "public_repos": user.public_repos,
-            "followers": user.followers,
-            "following": user.following
-        }
-        
-        # Get languages and repositories
-        languages_count = Counter()
-        starred_topics = Counter()
-        
-        try:
-            repos: List[Repository] = list(user.get_repos())
+        if github_user.login :
+            profile_data = {
+                "name": github_user.name or username,
+                "avatar_url": github_user.avatar_url,
+                "bio": github_user.bio or "",
+                "public_repos": github_user.public_repos,
+                "followers": github_user.followers,
+                "following": github_user.following
+            }
             
-            for repo in repos:
-                if not repo.fork:  # Only count original repos, not forks
-                    if repo.language:
-                        languages_count[repo.language] += 1
-                    try:
-                        for topic in repo.get_topics():
-                            starred_topics[topic] += 1
-                    except Exception:
-                        continue  # Skip if topics can't be fetched
-        except Exception as e:
-            print(f"Error fetching repositories: {str(e)}")
-            repos = []
-        
-        # Get contribution patterns
-        contribution_data = {
-            "total_repos": len(repos),
-            "top_languages": dict(languages_count.most_common(5)),
-            "top_topics": dict(starred_topics.most_common(5))
-        }
-        
-        return {
-            "profile": profile_data,
-            "contributions": contribution_data
-        }
-        
-    except Exception as e:
-        print(f"GitHub API Error: {str(e)}")
-        raise Exception(f"Failed to fetch GitHub data: {str(e)}")
+            languages_count = Counter()
+            
+            try:
+                repos: List[Repository] = list(github_user.get_repos())
+                
+                for repo in repos:
+                    if not repo.fork:
+                        if repo.language:
+                            languages_count[repo.language] += 1
+            except Exception as error:
+                print(f"Error fetching repositories: {str(error)}")
+                repos = []
+            
+            contribution_data = {
+                "total_repos": len(repos),
+                "top_languages": dict(languages_count.most_common(5))
+            }
+            
+            return {
+                "profile": profile_data,
+                "contributions": contribution_data
+            }
+            
+    except Exception as error:
+        print(f"GitHub API Error: {str(error)}")
+        raise Exception(f"Failed to fetch GitHub data: {str(error)}")
 
 def generate_conversation_starters(github_data: Dict) -> Dict:
     """
@@ -83,20 +67,18 @@ def generate_conversation_starters(github_data: Dict) -> Dict:
     Following: {following}
     
     Top Programming Languages: {languages}
-    Top Repository Topics: {topics}
     Total Repositories: {total_repos}
     
     Generate three types of conversation starters:
     1. Language-based: Focus on their programming language preferences and experience
-    2. Topic-based: Related to their repository topics and interests
-    3. General: About their GitHub activity and community involvement
+    2. General: About their GitHub activity and community involvement
     
     {format_instructions}
     """
     
     prompt = PromptTemplate(
         template=template,
-        input_variables=["name", "bio", "repos", "followers", "following", "languages", "topics", "total_repos"],
+        input_variables=["name", "bio", "repos", "followers", "following", "languages", "total_repos"],
         partial_variables={"format_instructions": conversation_starters_parser.get_format_instructions()}
     )
     
@@ -111,12 +93,10 @@ def generate_conversation_starters(github_data: Dict) -> Dict:
         "followers": github_data["profile"]["followers"],
         "following": github_data["profile"]["following"],
         "languages": ", ".join(github_data["contributions"]["top_languages"].keys()),
-        "topics": ", ".join(github_data["contributions"]["top_topics"].keys()),
         "total_repos": github_data["contributions"]["total_repos"]
     })
     
     return {
         "language_based": result.language_based,
-        "topic_based": result.topic_based,
         "general": result.general
     }
