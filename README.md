@@ -57,3 +57,10 @@ pipenv run python app.py
 - python-dotenv
 - langchain
 - requests
+
+## Architecture
+- [Mermaid Architecture Diagram](architecture_mermaid.md)
+- [ASCII Architecture Diagram](architecture_ascii.md)
+
+![Draw.io Architecture Diagram](architecture.drawio.svg)
+
