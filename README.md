@@ -5,6 +5,7 @@ A web app that generates personalized conversation starters based on GitHub prof
 # Project Goals
 
 - Use GitHub's API to fetch user information and repositories
+- Use Windsurf IDE to build project
 - Use Langchain's Large Language Models to analyze the user's information and generate conversation topics
 
 ## Features
