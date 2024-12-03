@@ -69,9 +69,7 @@ def generate_conversation_starters(github_data: Dict) -> Dict:
     Top Programming Languages: {languages}
     Total Repositories: {total_repos}
     
-    Generate three types of conversation starters:
-    1. Language-based: Focus on their programming language preferences and experience
-    2. General: About their GitHub activity and community involvement
+    Generate language-based conversation starters that focus on their programming language preferences and experience.
     
     {format_instructions}
     """
@@ -97,6 +95,5 @@ def generate_conversation_starters(github_data: Dict) -> Dict:
     })
     
     return {
-        "language_based": result.language_based,
-        "general": result.general
+        "language_based": result.language_based
     }

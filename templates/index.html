@@ -62,10 +62,6 @@
                             <h4 class="font-semibold text-blue-600">Based on Languages:</h4>
                             <ul id="language-starters" class="list-disc pl-5 mt-2 space-y-2"></ul>
                         </div>
-                        <div>
-                            <h4 class="font-semibold text-purple-600">General:</h4>
-                            <ul id="general-starters" class="list-disc pl-5 mt-2 space-y-2"></ul>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -135,13 +131,11 @@
         }
 
         function setConversationStarters(data) {
-            ['language', 'general'].forEach(type => {
-                const ul = document.getElementById(`${type}-starters`);
-                ul.innerHTML = '';
-                const starters = data.conversation_starters?.[`${type}_based`] || [];
-                starters.forEach(starter => {
-                    ul.innerHTML += `<li>${starter}</li>`;
-                });
+            const ul = document.getElementById('language-starters');
+            ul.innerHTML = '';
+            const starters = data.conversation_starters?.language_based || [];
+            starters.forEach(starter => {
+                ul.innerHTML += `<li>${starter}</li>`;
             });
         }
             
