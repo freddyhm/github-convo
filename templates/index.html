@@ -63,10 +63,6 @@
                             <ul id="language-starters" class="list-disc pl-5 mt-2 space-y-2"></ul>
                         </div>
                         <div>
-                            <h4 class="font-semibold text-green-600">Based on Topics:</h4>
-                            <ul id="topic-starters" class="list-disc pl-5 mt-2 space-y-2"></ul>
-                        </div>
-                        <div>
                             <h4 class="font-semibold text-purple-600">General:</h4>
                             <ul id="general-starters" class="list-disc pl-5 mt-2 space-y-2"></ul>
                         </div>
@@ -139,7 +135,7 @@
         }
 
         function setConversationStarters(data) {
-            ['language', 'topic', 'general'].forEach(type => {
+            ['language', 'general'].forEach(type => {
                 const ul = document.getElementById(`${type}-starters`);
                 ul.innerHTML = '';
                 const starters = data.conversation_starters?.[`${type}_based`] || [];
