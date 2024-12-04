@@ -14,20 +14,18 @@ def home():
 def analyze_github():
     data = request.json
     username = data.get("username")
-    
     try:
-        github_data = get_github_data(username)
-        conversation_starters = generate_conversation_starters(github_data)
+        conversation_starters = generate_conversation_starters(username)
         
         print("Debug - API Response:", {
-            "profile": github_data["profile"],
-            "contributions": github_data["contributions"],
+            "profile": conversation_starters["profile"],
+            "contributions": conversation_starters["contributions"],
             "conversation_starters": conversation_starters
         })
         
         return jsonify({
-            "profile": github_data["profile"],
-            "contributions": github_data["contributions"],
+            "profile": conversation_starters["profile"],
+            "contributions": conversation_starters["contributions"],
             "conversation_starters": conversation_starters
         })
     except Exception as error:

@@ -3,10 +3,16 @@ from github import Github
 from github.Repository import Repository
 from collections import Counter
 import os
+from langchain_core.tools import Tool
 from dotenv import load_dotenv
+from langchain import hub
+from langchain.agents import (
+    create_react_agent,
+    AgentExecutor
+)
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from output_parsers import conversation_starters_parser, ConversationStarters
+from output_parsers import conversation_starters_parser, github_data_parser, ConversationStarters
 
 load_dotenv()
 
@@ -54,7 +60,43 @@ def get_github_data(username: str) -> Dict:
         print(f"GitHub API Error: {str(error)}")
         raise Exception(f"Failed to fetch GitHub data: {str(error)}")
 
-def generate_conversation_starters(github_data: Dict) -> Dict:
+def get_github_data2(llm, username: str):
+    template2 = """Given the username {name}, retrieve their Github data and return it in the following JSON format without any markdown formatting or code blocks. The output should be a raw JSON object.
+                    
+                {format_instructions}
+
+                Remember: Return ONLY the JSON object without any additional text, markdown formatting, or code blocks."""
+
+    prompt_template2 = PromptTemplate(
+        template=template2, input_variables=["name"],
+        partial_variables={"format_instructions": github_data_parser.get_format_instructions()}
+    )
+    
+    tools_for_agent = [
+        Tool(
+            name="Get data from GitHub",
+            func=get_github_data,
+            description="useful for when you need to get Github data",  # super important - concise and has enough info
+        )
+    ]
+
+    react_prompt = hub.pull(
+        "hwchase17/react"
+    )
+    agent = create_react_agent(llm=llm, tools=tools_for_agent, prompt=react_prompt)
+    agent_executor = AgentExecutor(
+        agent=agent, tools=tools_for_agent, verbose=True
+    )
+    agent_result = agent_executor.invoke(
+        input={"input": prompt_template2.format_prompt(name="freddyhm")}
+    )
+    formatted_result = github_data_parser.parse(agent_result["output"])
+    
+    return formatted_result
+    
+
+def generate_conversation_starters(username: str) -> Dict:
+
     template = """
     Given the following information about a GitHub user, generate engaging conversation starters.
     Make them personal, specific, and related to their actual work and interests.
@@ -73,6 +115,8 @@ def generate_conversation_starters(github_data: Dict) -> Dict:
     
     {format_instructions}
     """
+
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
     
     prompt = PromptTemplate(
         template=template,
@@ -80,20 +124,32 @@ def generate_conversation_starters(github_data: Dict) -> Dict:
         partial_variables={"format_instructions": conversation_starters_parser.get_format_instructions()}
     )
     
-    llm = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
-    
+    formatted_result = get_github_data2(llm, username)    
+
     chain = prompt | llm | conversation_starters_parser
     
-    result: ConversationStarters = chain.invoke({
-        "name": github_data["profile"]["name"],
-        "bio": github_data["profile"]["bio"],
-        "repos": github_data["profile"]["public_repos"],
-        "followers": github_data["profile"]["followers"],
-        "following": github_data["profile"]["following"],
-        "languages": ", ".join(github_data["contributions"]["top_languages"].keys()),
-        "total_repos": github_data["contributions"]["total_repos"]
+    final_result: ConversationStarters = chain.invoke({
+        "name": formatted_result.name,
+        "bio": formatted_result.bio,
+        "repos": formatted_result.public_repos,
+        "followers": formatted_result.followers,
+        "following": formatted_result.following,
+        "languages": ", ".join(formatted_result.top_languages.keys()),
+        "total_repos": formatted_result.total_repos
     })
-    
+
     return {
-        "language_based": result.language_based
+        "profile": {
+            "name": formatted_result.name,
+            "avatar_url": formatted_result.avatar_url,
+            "bio": formatted_result.bio,
+            "public_repos": formatted_result.public_repos,
+            "followers": formatted_result.followers,
+            "following": formatted_result.following
+        },
+        "contributions": {
+            "total_repos": formatted_result.total_repos,
+            "top_languages": formatted_result.top_languages
+        },
+        "language_based": final_result.language_based
     }
