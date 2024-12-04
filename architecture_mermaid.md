@@ -13,19 +13,20 @@ graph TD
     subgraph "Flask Backend"
         B --> |"Routes"| G["Home Route"]
         B --> |"Routes"| H["Analyze Route"]
-        H --> |"Process"| I["GitHub Integration"]
+        H --> |"Process"| M["Conversation Generator"]
     end
 
-    subgraph "GitHub Integration"
-        I --> |"API Calls"| J["GitHub API"]
-        J --> |"Data"| K["Profile Data"]
-        J --> |"Data"| L["Contrib Data"]
-        I --> |"Generate"| M["Conversation Starters"]
+    subgraph "Conversation Generator"
+        M --> |"Step 1"| I["GitHub Data Fetcher"]
+        I --> |"LangChain Agent"| J["GitHub API"]
+        J --> |"Parse"| K["Profile & Contrib Data"]
+        M --> |"Step 2"| L["Generate Starters"]
+        K --> L
     end
 
     subgraph "External Services"
         J --> |"Auth"| N["GitHub Token"]
-        M --> |"API"| O["OpenAI API"]
+        L --> |"API"| O["OpenAI API"]
     end
 
     subgraph Configuration
