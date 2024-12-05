@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from third_parties.github import get_github_data, generate_conversation_starters
+from conversation_starters import generate_conversation_starters
 from dotenv import load_dotenv
 
 load_dotenv()
