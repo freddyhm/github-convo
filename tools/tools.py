@@ -3,6 +3,7 @@ from collections import Counter
 import os
 from github import Github
 from github.Repository import Repository
+from langchain_core.tools import tool
 
 def extract_contribution_data(github_user):
     languages_count = Counter()
@@ -24,8 +25,17 @@ def extract_contribution_data(github_user):
     }
     return contribution_data
 
-
+@tool
 def get_github_data(username: str) -> Dict:
+    """
+    Retrieve GitHub data for a given username.
+
+    Args:
+        username (str): The GitHub username to fetch data for.
+
+    Returns:
+        dict: A dictionary containing the GitHub profile data and contribution data.
+    """
     try:
         github_user = Github(os.getenv("GITHUB_ACCESS_TOKEN")).get_user(username)
         

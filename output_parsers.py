@@ -9,8 +9,8 @@ class GithubProfileData(BaseModel):
     public_repos: int = Field(description="Number of public repositories owned by the GitHub user")
     followers: int = Field(description="Number of followers of the GitHub user")
     following: int = Field(description="Number of users the GitHub user is following")
-    top_languages: dict = Field(description="Top programming languages used by the GitHub user")
-    total_repos: int = Field(description="Total number of repositories owned by the GitHub user")
+    top_languages: dict = Field(description="Top programming languages used by the GitHub user", default={})
+    total_repos: int = Field(description="Total number of repositories owned by the GitHub user", default=0)
 
 class ConversationStarters(BaseModel):
     language_based: List[str] = Field(description="Conversation starters based on programming languages")

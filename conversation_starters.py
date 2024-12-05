@@ -36,7 +36,7 @@ def generate_conversation_starters(username: str) -> Dict:
         partial_variables={"format_instructions": conversation_starters_parser.get_format_instructions()}
     )
     
-    formatted_result = generate_github_info(llm, username)    
+    formatted_result = generate_github_info(username)    
 
     chain = prompt | llm | conversation_starters_parser
     
