@@ -1,10 +1,44 @@
 from flask import Flask, render_template, request, jsonify
-from conversation_starters import generate_conversation_starters
 from dotenv import load_dotenv
+from conversation_starters import generate_conversation_starters
+from output_parsers import github_data_parser
+from agents.github_agent import create_github_agent
+
 
 load_dotenv()
 
 app = Flask(__name__)
+
+def create_inputs(username: str):
+    prompt = f"""Given the username {username}, retrieve their Github data and return it in the following JSON format without any markdown formatting or code blocks. The output should be a raw JSON object.
+
+                 { github_data_parser.get_format_instructions() }
+
+                 Remember: Return ONLY the JSON object without any additional text, markdown formatting, or code blocks."""
+
+    return {"messages": [("user", prompt)]}
+
+def get_github_info(raw_output: str):
+    parsed_data = github_data_parser.parse(raw_output)
+    github_info = generate_conversation_starters(parsed_data)
+
+    return {
+        "profile": github_info["profile"],
+        "contributions": github_info["contributions"],
+        "conversation_starters": github_info
+    }
+
+def process_graph_stream(graph, inputs):
+    for step_output in graph.stream(inputs, stream_mode="values"):
+        message = step_output["messages"][-1]
+
+        if isinstance(message, tuple):
+            print(message)
+        else:
+            message.pretty_print()
+
+    return message.content
+
 
 @app.route("/")
 def home():
@@ -14,20 +48,15 @@ def home():
 def analyze_github():
     data = request.json
     username = data.get("username")
+
+    graph = create_github_agent()
+    inputs = create_inputs(username)
+    output = process_graph_stream(graph, inputs)
+    result = get_github_info(raw_output=output)
+
     try:
-        conversation_starters = generate_conversation_starters(username)
-        
-        print("Debug - API Response:", {
-            "profile": conversation_starters["profile"],
-            "contributions": conversation_starters["contributions"],
-            "conversation_starters": conversation_starters
-        })
-        
-        return jsonify({
-            "profile": conversation_starters["profile"],
-            "contributions": conversation_starters["contributions"],
-            "conversation_starters": conversation_starters
-        })
+        return jsonify(result)
+
     except Exception as error:
         print(f"Debug - Error: {str(error)}")
         return jsonify({"error": str(error)}), 500

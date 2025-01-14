@@ -5,12 +5,13 @@ name = "pypi"
 
 [packages]
 langchain = "*"
-langchain-openai = "*"
 langchain-community = "*"
 python-dotenv = "*"
 flask = "*"
 PyGithub = "*"
 requests = "*"
+langgraph = "*"
+langchain-openai = "==0.2.11"
 
 [dev-packages]
 
