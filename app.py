@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from conversation_starters import generate_conversation_starters
 from output_parsers import github_data_parser
-from agents.github_agent import create_github_agent
+from agents.github_agent import create_github_agent_graph
 
 
 load_dotenv()
@@ -49,7 +49,8 @@ def analyze_github():
     data = request.json
     username = data.get("username")
 
-    graph = create_github_agent()
+    # this a prebuilt graph
+    graph = create_github_agent_graph()
     inputs = create_inputs(username)
     output = process_graph_stream(graph, inputs)
     result = get_github_info(raw_output=output)
