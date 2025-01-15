@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from conversation_starters import generate_conversation_starters
 from output_parsers import github_data_parser
-from agents.github_agent import create_github_agent_graph
+from openai import OpenAI
+from agents.github_agent import create_github_agent
 
 
 load_dotenv()
@@ -28,18 +29,6 @@ def get_github_info(raw_output: str):
         "conversation_starters": github_info
     }
 
-def process_graph_stream(graph, inputs):
-    for step_output in graph.stream(inputs, stream_mode="values"):
-        message = step_output["messages"][-1]
-
-        if isinstance(message, tuple):
-            print(message)
-        else:
-            message.pretty_print()
-
-    return message.content
-
-
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -49,14 +38,13 @@ def analyze_github():
     data = request.json
     username = data.get("username")
 
-    # this a prebuilt graph
-    graph = create_github_agent_graph()
-    inputs = create_inputs(username)
-    output = process_graph_stream(graph, inputs)
-    result = get_github_info(raw_output=output)
-
     try:
-        return jsonify(result)
+
+        inputs = create_inputs(username)
+        message = create_github_agent(inputs.get("messages")[0][1])
+        result = get_github_info(raw_output=message)
+
+        return result
 
     except Exception as error:
         print(f"Debug - Error: {str(error)}")
